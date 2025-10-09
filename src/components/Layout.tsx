@@ -1,13 +1,26 @@
-/* Layout Component - A component that wraps the main content of the app
-   - Use this file to add a header, footer, or other elements that should be present on every page
-   - This component is used in the App.tsx file to wrap the main content of the app */
-
 import { Outlet } from 'react-router-dom'
+import { Header } from '@/components/Header'
+import { Footer } from '@/components/Footer'
+import { Sidebar } from '@/components/Sidebar'
+import { useMediaQuery } from '@/hooks/use-media-query'
 
 export default function Layout() {
+  const isDesktop = useMediaQuery('(min-width: 768px)')
+
   return (
-    <main className="flex flex-col min-h-screen">
-      <Outlet />
-    </main>
+    <div className="flex min-h-screen flex-col bg-secondary">
+      <Header />
+      <div className="flex flex-1">
+        {isDesktop && (
+          <aside className="w-60 border-r bg-background p-4">
+            <Sidebar />
+          </aside>
+        )}
+        <main className="flex-1 bg-background">
+          <Outlet />
+        </main>
+      </div>
+      <Footer />
+    </div>
   )
 }
