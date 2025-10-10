@@ -94,7 +94,9 @@ export default function EmailValidatorPage() {
     setSingleResult(null)
     try {
       const response = await fetch(
-        `${SINGLE_VALIDATION_URL}?api_key=${API_KEY}&email=${encodeURIComponent(singleEmail)}`,
+        `${SINGLE_VALIDATION_URL}?api_key=${API_KEY}&email=${encodeURIComponent(
+          singleEmail,
+        )}`,
       )
       if (!response.ok) throw new Error('Falha na validação do e-mail.')
       const result: SingleValidationResult = await response.json()
@@ -213,9 +215,24 @@ export default function EmailValidatorPage() {
         method: 'POST',
         body: formData,
       })
-      if (!response.ok) throw new Error('Falha no upload do arquivo.')
+
       const data: FileUploadResponse = await response.json()
-      if (!data.success) throw new Error(data.message)
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            'Falha no upload do arquivo. O servidor respondeu com um erro.',
+        )
+      }
+
+      if (!data.success) {
+        throw new Error(data.message || 'Ocorreu um erro reportado pela API.')
+      }
+
+      toast({
+        title: 'Upload bem-sucedido!',
+        description: 'Seu arquivo está sendo processado. Aguarde...',
+      })
 
       setBatchFileId(data.file_id)
       pollBatchStatus(data.file_id)
