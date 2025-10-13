@@ -9,6 +9,7 @@ import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
 import EmailValidatorPage from './pages/EmailValidator'
 import SpreadsheetConverterPage from './pages/SpreadsheetConverter'
+import PartnerContactExtractorPage from './pages/PartnerContactExtractor'
 
 // ONLY IMPORT AND RENDER WORKING PAGES, NEVER ADD PLACEHOLDER COMPONENTS OR PAGES IN THIS FILE
 // AVOID REMOVING ANY CONTEXT PROVIDERS FROM THIS FILE (e.g. TooltipProvider, Toaster, Sonner)
@@ -28,6 +29,10 @@ const App = () => (
             <Route
               path="/spreadsheet-converter"
               element={<SpreadsheetConverterPage />}
+            />
+            <Route
+              path="/partner-contact-extractor"
+              element={<PartnerContactExtractorPage />}
             />
           </Route>
           <Route path="*" element={<NotFound />} />

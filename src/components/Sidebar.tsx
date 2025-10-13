@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { cn } from '@/lib/utils'
-import { MailCheck, Sheet as SheetIcon } from 'lucide-react'
+import { MailCheck, Sheet as SheetIcon, Users } from 'lucide-react'
 
 interface SidebarProps {
   className?: string
@@ -13,6 +13,11 @@ const navigation = [
     name: 'Conversor de Planilhas',
     href: '/spreadsheet-converter',
     icon: SheetIcon,
+  },
+  {
+    name: 'Processador de Contatos',
+    href: '/partner-contact-extractor',
+    icon: Users,
   },
 ]
 
