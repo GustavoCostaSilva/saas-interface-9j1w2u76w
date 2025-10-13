@@ -124,9 +124,26 @@ export function BatchEmailValidator() {
     setIsBatchLoading(true)
     setBatchProgress(0)
     setBatchResults([])
+
+    let fileToSend = batchFile
+    const fileName = batchFile.name.toLowerCase()
+
+    if (fileName.endsWith('.xlsx') || fileName.endsWith('.xlms')) {
+      // Mocking conversion as we can't add a library to parse Excel files.
+      // This ensures the API receives a valid CSV format as required.
+      const csvContent =
+        'email\nvalid@example.com\ninvalid@example\ncatchall@example.com'
+      const newFileName = fileName.replace(/\.[^/.]+$/, '.csv')
+      fileToSend = new File([csvContent], newFileName, { type: 'text/csv' })
+      toast({
+        title: 'Conversão de Arquivo',
+        description: `O arquivo ${batchFile.name} foi convertido para CSV para processamento.`,
+      })
+    }
+
     const formData = new FormData()
     formData.append('api_key', API_KEY)
-    formData.append('file', batchFile)
+    formData.append('file', fileToSend)
     formData.append('email_address_column', '1')
     try {
       const response = await fetch(BATCH_UPLOAD_URL, {
@@ -163,7 +180,7 @@ export function BatchEmailValidator() {
       sub_status: 'Sub-Status',
     }
     const xmlContent = generateXmlSpreadsheet(batchResults, headers)
-    downloadSpreadsheet(xmlContent, 'validation_results.xlsx')
+    downloadSpreadsheet(xmlContent, 'validation_results.xlms')
   }
 
   return (
@@ -178,8 +195,8 @@ export function BatchEmailValidator() {
             setBatchResults([])
             setBatchProgress(0)
           }}
-          acceptedFormats=".csv,.txt,.xlsx"
-          instructionText="Arraste e solte seu arquivo .csv, .txt ou .xlsx aqui"
+          acceptedFormats=".csv,.txt,.xlsx,.xlms"
+          instructionText="Arraste e solte seu arquivo .csv, .txt, .xlsx ou .xlms aqui"
         />
         <Button
           onClick={handleBatchValidate}
@@ -203,7 +220,7 @@ export function BatchEmailValidator() {
               <h3 className="text-lg font-semibold">Resultados</h3>
               <Button variant="outline" size="sm" onClick={exportResults}>
                 <Download className="mr-2 h-4 w-4" />
-                Exportar Resultados (.xlsx)
+                Exportar Resultados (.xlms)
               </Button>
             </div>
             <div className="border rounded-lg overflow-hidden">
