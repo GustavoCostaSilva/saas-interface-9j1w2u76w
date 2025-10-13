@@ -252,22 +252,26 @@ export default function EmailValidatorPage() {
   const exportResults = () => {
     if (batchResults.length === 0) return
     const headers = ['email', 'status', 'sub_status']
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      [
-        headers.join(','),
-        ...batchResults.map((row) =>
-          headers.map((header) => row[header as keyof BatchResult]).join(','),
-        ),
-      ].join('\n')
-
-    const encodedUri = encodeURI(csvContent)
+    const csvRows = [
+      headers.join(','),
+      ...batchResults.map((row) =>
+        headers
+          .map((header) => `"${row[header as keyof BatchResult]}"`)
+          .join(','),
+      ),
+    ]
+    const csvContent = csvRows.join('\n')
+    const blob = new Blob([csvContent], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    })
+    const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
-    link.setAttribute('href', encodedUri)
-    link.setAttribute('download', 'validation_results.csv')
+    link.setAttribute('href', url)
+    link.setAttribute('download', 'validation_results.xlsx')
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+    URL.revokeObjectURL(url)
   }
 
   const renderStatus = (status: ValidationStatus) => {
@@ -344,8 +348,8 @@ export default function EmailValidatorPage() {
                   setBatchResults([])
                   setBatchProgress(0)
                 }}
-                acceptedFormats=".csv,.txt"
-                instructionText="Arraste e solte seu arquivo .csv ou .txt aqui"
+                acceptedFormats=".csv,.txt,.xlsx"
+                instructionText="Arraste e solte seu arquivo .csv, .txt ou .xlsx aqui"
               />
               <Button
                 onClick={handleBatchValidate}
@@ -371,7 +375,7 @@ export default function EmailValidatorPage() {
                     <h3 className="text-lg font-semibold">Resultados</h3>
                     <Button variant="outline" size="sm" onClick={exportResults}>
                       <Download className="mr-2 h-4 w-4" />
-                      Exportar Resultados
+                      Exportar Resultados (.xlsx)
                     </Button>
                   </div>
                   <div className="border rounded-lg overflow-hidden">
