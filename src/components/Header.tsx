@@ -14,7 +14,7 @@ export function Header() {
       <div className="container flex h-16 items-center justify-between px-4 md:px-6">
         <Link to="/" className="flex items-center gap-2">
           <Combine className="h-6 w-6 text-primary" />
-          <span className="text-lg font-semibold">Ferramentas Essenciais</span>
+          <span className="text-lg font-semibold">Dibai Hub</span>
         </Link>
 
         <div className="flex items-center gap-2">
@@ -37,7 +37,7 @@ export function Header() {
                     onClick={() => setIsSheetOpen(false)}
                   >
                     <Combine className="h-6 w-6 text-primary" />
-                    <span className="text-lg font-semibold">Ferramentas</span>
+                    <span className="text-lg font-semibold">Dibai Hub</span>
                   </Link>
                   <ThemeToggle />
                 </div>

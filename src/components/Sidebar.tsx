@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { cn } from '@/lib/utils'
-import { MailCheck, Sheet as SheetIcon, Users } from 'lucide-react'
+import { Home, MailCheck, Sheet as SheetIcon, Users } from 'lucide-react'
 
 interface SidebarProps {
   className?: string
@@ -8,6 +8,7 @@ interface SidebarProps {
 }
 
 const navigation = [
+  { name: 'Dibai Hub', href: '/', icon: Home },
   { name: 'Validador de E-mail', href: '/email-validator', icon: MailCheck },
   {
     name: 'Conversor de Planilhas',
@@ -37,6 +38,7 @@ export function Sidebar({ className, onLinkClick }: SidebarProps) {
                 : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
             )
           }
+          end={item.href === '/'}
         >
           <item.icon className="h-5 w-5" />
           <span>{item.name}</span>

@@ -7,60 +7,79 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { MailCheck, Sheet, ArrowRight } from 'lucide-react'
+import { Mail, Users, FileUp, ArrowRight } from 'lucide-react'
+import { EmailValidatorHistory } from '@/components/EmailValidatorHistory'
+import { PartnerContactExtractorHistory } from '@/components/PartnerContactExtractorHistory'
 
 export default function Index() {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center p-4 md:p-8">
-      <div className="text-center max-w-3xl mx-auto">
+    <div className="flex flex-1 flex-col gap-8 p-4 md:p-8">
+      <div className="max-w-5xl">
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground">
-          Bem-vindo(a) às Ferramentas Essenciais!
+          Dibai Hub
         </h1>
         <p className="mt-4 text-lg text-muted-foreground">
-          Sua solução completa para validação de e-mails e conversão de
-          planilhas.
+          Sua central de ferramentas para otimizar processos e extrair dados
+          valiosos.
         </p>
       </div>
 
-      <div className="mt-12 grid gap-8 md:grid-cols-2 max-w-4xl w-full">
-        <Card className="transform transition-transform duration-250 ease-out hover:-translate-y-1 hover:shadow-md-hover">
-          <CardHeader className="items-center text-center">
-            <div className="p-3 rounded-full bg-primary/10 mb-4">
-              <MailCheck className="h-8 w-8 text-primary" />
+      <div className="grid gap-8 md:grid-cols-2 max-w-5xl">
+        <Card className="flex flex-col">
+          <CardHeader>
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-full bg-primary/10">
+                <Mail className="h-8 w-8 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl">Validador de E-mail</CardTitle>
+                <CardDescription>
+                  Verifique e-mails individualmente ou em lote.
+                </CardDescription>
+              </div>
             </div>
-            <CardTitle className="text-2xl">Validador de E-mail</CardTitle>
-            <CardDescription>
-              Verifique a validade de e-mails individualmente ou em lote com
-              precisão.
-            </CardDescription>
           </CardHeader>
-          <CardContent className="flex justify-center">
-            <Button asChild>
+          <CardContent className="flex flex-col sm:flex-row gap-4 mt-auto">
+            <Button asChild className="w-full">
               <Link to="/email-validator">
-                Acessar Validador <ArrowRight className="ml-2 h-4 w-4" />
+                Validação Única <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+            <Button asChild variant="secondary" className="w-full">
+              <Link to="/email-validator">
+                Validação em Lote <FileUp className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </CardContent>
         </Card>
 
-        <Card className="transform transition-transform duration-250 ease-out hover:-translate-y-1 hover:shadow-md-hover">
-          <CardHeader className="items-center text-center">
-            <div className="p-3 rounded-full bg-primary/10 mb-4">
-              <Sheet className="h-8 w-8 text-primary" />
+        <Card className="flex flex-col">
+          <CardHeader>
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-full bg-primary/10">
+                <Users className="h-8 w-8 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl">Extrator de Contatos</CardTitle>
+                <CardDescription>
+                  Processe planilhas para extrair contatos de sócios.
+                </CardDescription>
+              </div>
             </div>
-            <CardTitle className="text-2xl">Conversor de Planilhas</CardTitle>
-            <CardDescription>
-              Transforme suas planilhas Excel/CSV em formatos otimizados.
-            </CardDescription>
           </CardHeader>
-          <CardContent className="flex justify-center">
-            <Button asChild>
-              <Link to="/spreadsheet-converter">
-                Acessar Conversor <ArrowRight className="ml-2 h-4 w-4" />
+          <CardContent className="mt-auto">
+            <Button asChild className="w-full">
+              <Link to="/partner-contact-extractor">
+                Acessar Extrator <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="grid gap-8 lg:grid-cols-2 max-w-7xl">
+        <EmailValidatorHistory />
+        <PartnerContactExtractorHistory />
       </div>
     </div>
   )
