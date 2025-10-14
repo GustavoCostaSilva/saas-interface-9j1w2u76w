@@ -1,5 +1,3 @@
-import * as XLSX from 'xlsx'
-
 export const COLUMN_CODES = {
   RAZAO_SOCIAL: 'razao_social',
   NOME_SOCIO: 'nome_socio',
@@ -125,51 +123,4 @@ export const parseXml = (xmlText: string): Record<string, string>[] => {
   }
 
   return data
-}
-
-export const parseXlsx = (data: ArrayBuffer): Record<string, string>[] => {
-  if (data.byteLength === 0) {
-    throw new Error('Arquivo XLSX vazio.')
-  }
-
-  try {
-    const workbook = XLSX.read(data, { type: 'array' })
-    if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
-      throw new Error('Nenhuma planilha encontrada no arquivo XLSX.')
-    }
-    const sheetName = workbook.SheetNames[0]
-    const worksheet = workbook.Sheets[sheetName]
-    const jsonData = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet, {
-      defval: '',
-    })
-
-    if (jsonData.length === 0) {
-      return []
-    }
-
-    const headers = Object.keys(jsonData[0])
-    const requiredHeaders = Object.values(COLUMN_CODES)
-    const missingHeaders = requiredHeaders.filter((h) => !headers.includes(h))
-
-    if (missingHeaders.length > 0) {
-      throw new Error(
-        `Códigos de coluna ausentes no arquivo XLSX: ${missingHeaders.join(
-          ', ',
-        )}`,
-      )
-    }
-
-    return jsonData.map((row) => {
-      const newRow: Record<string, string> = {}
-      for (const key in row) {
-        newRow[key] = String(row[key])
-      }
-      return newRow
-    })
-  } catch (error) {
-    console.error('Error parsing XLSX file:', error)
-    throw new Error(
-      'Falha ao processar o arquivo XLSX. Verifique se o formato está correto.',
-    )
-  }
 }

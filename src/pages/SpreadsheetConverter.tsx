@@ -53,13 +53,13 @@ export default function SpreadsheetConverterPage() {
     const blob = new Blob(
       ['Este é um arquivo de planilha convertido de teste.'],
       {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        type: 'text/csv;charset=utf-8;',
       },
     )
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'planilha_convertida.xlsx'
+    a.download = 'planilha_convertida.csv'
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -106,7 +106,7 @@ export default function SpreadsheetConverterPage() {
         <CardHeader>
           <CardTitle>Converter Planilha</CardTitle>
           <CardDescription>
-            Transforme suas planilhas Excel/CSV em formatos otimizados.
+            Transforme suas planilhas CSV em formatos otimizados.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -115,8 +115,8 @@ export default function SpreadsheetConverterPage() {
               setFile(selectedFile)
               setStatus('idle')
             }}
-            acceptedFormats=".xlsx,.xls,.csv"
-            instructionText="Arraste e solte seu arquivo Excel/CSV aqui"
+            acceptedFormats=".csv"
+            instructionText="Arraste e solte seu arquivo CSV aqui"
           />
           <div className="flex flex-col items-center gap-4">
             <Button
