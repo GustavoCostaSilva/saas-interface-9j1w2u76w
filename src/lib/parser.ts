@@ -1,3 +1,5 @@
+import * as XLSX from 'xlsx'
+
 export const COLUMN_CODES = {
   RAZAO_SOCIAL: 'razao_social',
   NOME_SOCIO: 'nome_socio',
@@ -130,24 +132,44 @@ export const parseXlsx = (data: ArrayBuffer): Record<string, string>[] => {
     throw new Error('Arquivo XLSX vazio.')
   }
 
-  return [
-    {
-      [COLUMN_CODES.RAZAO_SOCIAL]: 'Empresa XLSX Mock 1',
-      [COLUMN_CODES.NOME_SOCIO]: 'Sócio Mock Um',
-      [COLUMN_CODES.EMAIL_SOCIO]: 'socio1.mock@exemplo.com',
-      [COLUMN_CODES.TELEFONE_SOCIO]: '11999998888',
-    },
-    {
-      [COLUMN_CODES.RAZAO_SOCIAL]: 'Empresa XLSX Mock 2',
-      [COLUMN_CODES.NOME_SOCIO]: 'Sócio Mock Dois',
-      [COLUMN_CODES.EMAIL_SOCIO]: 'socio2.mock@exemplo.com',
-      [COLUMN_CODES.TELEFONE_SOCIO]: '21988887777',
-    },
-    {
-      [COLUMN_CODES.RAZAO_SOCIAL]: 'Empresa XLSX Mock 3',
-      [COLUMN_CODES.NOME_SOCIO]: 'Sócio Mock Três',
-      [COLUMN_CODES.EMAIL_SOCIO]: '',
-      [COLUMN_CODES.TELEFONE_SOCIO]: '31977776666',
-    },
-  ]
+  try {
+    const workbook = XLSX.read(data, { type: 'array' })
+    if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+      throw new Error('Nenhuma planilha encontrada no arquivo XLSX.')
+    }
+    const sheetName = workbook.SheetNames[0]
+    const worksheet = workbook.Sheets[sheetName]
+    const jsonData = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet, {
+      defval: '',
+    })
+
+    if (jsonData.length === 0) {
+      return []
+    }
+
+    const headers = Object.keys(jsonData[0])
+    const requiredHeaders = Object.values(COLUMN_CODES)
+    const missingHeaders = requiredHeaders.filter((h) => !headers.includes(h))
+
+    if (missingHeaders.length > 0) {
+      throw new Error(
+        `Códigos de coluna ausentes no arquivo XLSX: ${missingHeaders.join(
+          ', ',
+        )}`,
+      )
+    }
+
+    return jsonData.map((row) => {
+      const newRow: Record<string, string> = {}
+      for (const key in row) {
+        newRow[key] = String(row[key])
+      }
+      return newRow
+    })
+  } catch (error) {
+    console.error('Error parsing XLSX file:', error)
+    throw new Error(
+      'Falha ao processar o arquivo XLSX. Verifique se o formato está correto.',
+    )
+  }
 }
