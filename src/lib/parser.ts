@@ -7,26 +7,36 @@ export const COLUMN_CODES = {
 
 const parseCsvLine = (line: string): string[] => {
   const values: string[] = []
-  let current = ''
+  let currentVal = ''
   let inQuotes = false
+
   for (let i = 0; i < line.length; i++) {
     const char = line[i]
-    if (char === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        current += '"'
-        i++
+
+    if (inQuotes) {
+      if (char === '"') {
+        if (i + 1 < line.length && line[i + 1] === '"') {
+          currentVal += '"'
+          i++
+        } else {
+          inQuotes = false
+        }
       } else {
-        inQuotes = !inQuotes
+        currentVal += char
       }
-    } else if (char === ',' && !inQuotes) {
-      values.push(current)
-      current = ''
     } else {
-      current += char
+      if (char === '"') {
+        inQuotes = true
+      } else if (char === ',') {
+        values.push(currentVal)
+        currentVal = ''
+      } else {
+        currentVal += char
+      }
     }
   }
-  values.push(current)
-  return values.map((v) => v.trim().replace(/^"|"$/g, ''))
+  values.push(currentVal)
+  return values
 }
 
 export const parseCsv = (csvText: string): Record<string, string>[] => {
@@ -35,7 +45,7 @@ export const parseCsv = (csvText: string): Record<string, string>[] => {
     throw new Error('CSV inválido ou vazio.')
   }
 
-  const headers = parseCsvLine(lines[0])
+  const headers = parseCsvLine(lines[0]).map((h) => h.trim())
   const requiredHeaders = Object.values(COLUMN_CODES)
   const missingHeaders = requiredHeaders.filter((h) => !headers.includes(h))
   if (missingHeaders.length > 0) {
@@ -47,12 +57,17 @@ export const parseCsv = (csvText: string): Record<string, string>[] => {
   const data: Record<string, string>[] = []
 
   for (let i = 1; i < lines.length; i++) {
-    if (!lines[i]) continue
+    if (!lines[i].trim()) continue
     const values = parseCsvLine(lines[i])
+
+    if (values.length !== headers.length) {
+      continue
+    }
+
     if (values.length > 0 && values.some((v) => v)) {
       const entry: Record<string, string> = {}
       for (let j = 0; j < headers.length; j++) {
-        entry[headers[j]] = values[j] || ''
+        entry[headers[j]] = (values[j] || '').trim()
       }
       data.push(entry)
     }
