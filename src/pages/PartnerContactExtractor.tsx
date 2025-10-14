@@ -65,7 +65,10 @@ export default function PartnerContactExtractorPage() {
     const reader = new FileReader()
     reader.onload = async (e) => {
       try {
-        const text = e.target?.result as string
+        const text = e.target?.result
+        if (typeof text !== 'string') {
+          throw new Error('Falha ao ler o conteúdo do arquivo.')
+        }
         let records: Record<string, string>[]
 
         if (file.name.toLowerCase().endsWith('.xml')) {
