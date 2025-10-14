@@ -11,7 +11,7 @@ import { FileUploader } from '@/components/FileUploader'
 import { Loader2, CheckCircle, XCircle, Download } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { parseCsv, parseXml, COLUMN_CODES } from '@/lib/parser'
+import { parseCsv, parseXml, parseXlsx, COLUMN_CODES } from '@/lib/parser'
 
 type ProcessingStatus = 'idle' | 'loading' | 'success' | 'error'
 type ProcessedData = {
@@ -65,18 +65,30 @@ export default function PartnerContactExtractorPage() {
     const reader = new FileReader()
     reader.onload = async (e) => {
       try {
-        const text = e.target?.result
-        if (typeof text !== 'string') {
+        const content = e.target?.result
+        if (!content) {
           throw new Error('Falha ao ler o conteúdo do arquivo.')
         }
         let records: Record<string, string>[]
 
-        if (file.name.toLowerCase().endsWith('.xml')) {
-          records = parseXml(text)
-        } else if (file.name.toLowerCase().endsWith('.csv')) {
-          records = parseCsv(text)
+        const fileExtension = file.name.toLowerCase().split('.').pop()
+
+        if (fileExtension === 'xml') {
+          if (typeof content !== 'string')
+            throw new Error('Conteúdo de XML inválido.')
+          records = parseXml(content)
+        } else if (fileExtension === 'csv') {
+          if (typeof content !== 'string')
+            throw new Error('Conteúdo de CSV inválido.')
+          records = parseCsv(content)
+        } else if (fileExtension === 'xlsx') {
+          if (!(content instanceof ArrayBuffer))
+            throw new Error('Conteúdo de XLSX inválido.')
+          records = parseXlsx(content)
         } else {
-          throw new Error('Formato de arquivo não suportado. Use .csv ou .xml.')
+          throw new Error(
+            'Formato de arquivo não suportado. Use .csv, .xml ou .xlsx.',
+          )
         }
 
         const emails: string[] = []
@@ -146,7 +158,12 @@ export default function PartnerContactExtractorPage() {
       })
     }
 
-    reader.readAsText(file, 'UTF-8')
+    const fileExtension = file.name.toLowerCase().split('.').pop()
+    if (fileExtension === 'xlsx') {
+      reader.readAsArrayBuffer(file)
+    } else {
+      reader.readAsText(file, 'UTF-8')
+    }
   }
 
   const createAndDownloadFile = (
@@ -221,9 +238,9 @@ export default function PartnerContactExtractorPage() {
         <CardHeader>
           <CardTitle>Extrair Contatos e E-mails</CardTitle>
           <CardDescription>
-            Faça o upload de sua planilha (.csv ou .xml) para gerar arquivos de
-            contatos e e-mails de sócios. O arquivo deve conter as colunas com
-            os códigos corretos.
+            Faça o upload de sua planilha (.csv, .xml ou .xlsx) para gerar
+            arquivos de contatos e e-mails de sócios. O arquivo deve conter as
+            colunas com os códigos corretos.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -233,8 +250,8 @@ export default function PartnerContactExtractorPage() {
               setStatus('idle')
               setProcessedData(null)
             }}
-            acceptedFormats=".csv,.xml"
-            instructionText="Arraste e solte sua planilha .csv ou .xml aqui"
+            acceptedFormats=".csv,.xml,.xlsx"
+            instructionText="Arraste e solte sua planilha .csv, .xml ou .xlsx aqui"
           />
           <div className="flex flex-col items-center gap-4">
             <Button

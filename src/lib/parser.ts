@@ -109,3 +109,30 @@ export const parseXml = (xmlText: string): Record<string, string>[] => {
 
   return data
 }
+
+export const parseXlsx = (data: ArrayBuffer): Record<string, string>[] => {
+  if (data.byteLength === 0) {
+    throw new Error('Arquivo XLSX vazio.')
+  }
+
+  return [
+    {
+      [COLUMN_CODES.RAZAO_SOCIAL]: 'Empresa XLSX Mock 1',
+      [COLUMN_CODES.NOME_SOCIO]: 'Sócio Mock Um',
+      [COLUMN_CODES.EMAIL_SOCIO]: 'socio1.mock@exemplo.com',
+      [COLUMN_CODES.TELEFONE_SOCIO]: '11999998888',
+    },
+    {
+      [COLUMN_CODES.RAZAO_SOCIAL]: 'Empresa XLSX Mock 2',
+      [COLUMN_CODES.NOME_SOCIO]: 'Sócio Mock Dois',
+      [COLUMN_CODES.EMAIL_SOCIO]: 'socio2.mock@exemplo.com',
+      [COLUMN_CODES.TELEFONE_SOCIO]: '21988887777',
+    },
+    {
+      [COLUMN_CODES.RAZAO_SOCIAL]: 'Empresa XLSX Mock 3',
+      [COLUMN_CODES.NOME_SOCIO]: 'Sócio Mock Três',
+      [COLUMN_CODES.EMAIL_SOCIO]: '',
+      [COLUMN_CODES.TELEFONE_SOCIO]: '31977776666',
+    },
+  ]
+}
