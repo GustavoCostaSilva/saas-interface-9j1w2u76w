@@ -67,9 +67,9 @@ export default function PartnerContactExtractorPage() {
     const content =
       'Email Sócio\nsocio1@example.com\nsocio2@example.com\nsocio3@example.com'
     createAndDownloadFile(
-      'emails_socios.xlsx',
+      'emails_socios.csv',
       content,
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'text/csv;charset=utf-8;',
     )
   }
 
@@ -155,7 +155,7 @@ export default function PartnerContactExtractorPage() {
               <div className="w-full grid sm:grid-cols-2 gap-4 animate-fade-in-up">
                 <Button onClick={handleDownloadEmails} className="w-full">
                   <Download className="mr-2 h-4 w-4" />
-                  Baixar E-mails de Sócios
+                  Baixar E-mails de Sócios (.csv)
                 </Button>
                 <Button onClick={handleDownloadContacts} className="w-full">
                   <Download className="mr-2 h-4 w-4" />
