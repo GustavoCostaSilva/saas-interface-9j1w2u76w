@@ -11,7 +11,7 @@ import { FileUploader } from '@/components/FileUploader'
 import { Loader2, CheckCircle, XCircle, Download } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { parseCsv, parseXml } from '@/lib/parser'
+import { parseCsv, parseXml, COLUMN_CODES } from '@/lib/parser'
 
 type ProcessingStatus = 'idle' | 'loading' | 'success' | 'error'
 type ProcessedData = {
@@ -80,10 +80,10 @@ export default function PartnerContactExtractorPage() {
         const contacts: string[][] = []
 
         for (const record of records) {
-          const partnerName = record['Nome Sócio']?.trim()
-          const companyName = record['Razão Social']?.trim()
-          const partnerEmail = record['Email Sócio']?.trim()
-          const partnerPhone = record['Telefone Sócio']?.trim()
+          const partnerName = record[COLUMN_CODES.NOME_SOCIO]?.trim()
+          const companyName = record[COLUMN_CODES.RAZAO_SOCIAL]?.trim()
+          const partnerEmail = record[COLUMN_CODES.EMAIL_SOCIO]?.trim()
+          const partnerPhone = record[COLUMN_CODES.TELEFONE_SOCIO]?.trim()
 
           if (partnerEmail) {
             emails.push(partnerEmail)
@@ -100,7 +100,7 @@ export default function PartnerContactExtractorPage() {
           }
         }
 
-        const emailsCsv = ['Email Sócio', ...emails].join('\n')
+        const emailsCsv = ['email_socio', ...emails].join('\n')
         const contactsCsv = [
           toCsvRow(['name', 'phone_number', 'bussines', 'prompt']),
           ...contacts.map(toCsvRow),
@@ -219,8 +219,8 @@ export default function PartnerContactExtractorPage() {
           <CardTitle>Extrair Contatos e E-mails</CardTitle>
           <CardDescription>
             Faça o upload de sua planilha (.csv ou .xml) para gerar arquivos de
-            contatos e e-mails de sócios. O arquivo deve conter as colunas
-            necessárias.
+            contatos e e-mails de sócios. O arquivo deve conter as colunas com
+            os códigos corretos.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
