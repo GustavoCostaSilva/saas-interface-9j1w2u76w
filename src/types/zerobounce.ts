@@ -59,7 +59,7 @@ export interface SingleValidationResult {
 export interface BatchResult {
   email: string
   status: ValidationStatus
-  sub_status: ValidationSubStatus
+  sub_status: string
 }
 
 export interface FileUploadResponse {

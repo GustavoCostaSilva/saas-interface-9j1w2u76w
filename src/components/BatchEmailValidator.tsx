@@ -28,6 +28,30 @@ const BATCH_UPLOAD_URL = 'https://bulkapi.zerobounce.net/v2/sendfile'
 const BATCH_STATUS_URL = 'https://bulkapi.zerobounce.net/v2/filestatus'
 const BATCH_RESULT_URL = 'https://bulkapi.zerobounce.net/v2/getfile'
 
+const parseCsvLine = (line: string): string[] => {
+  const values: string[] = []
+  let current = ''
+  let inQuotes = false
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i]
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"'
+        i++
+      } else {
+        inQuotes = !inQuotes
+      }
+    } else if (char === ',' && !inQuotes) {
+      values.push(current)
+      current = ''
+    } else {
+      current += char
+    }
+  }
+  values.push(current)
+  return values
+}
+
 export function BatchEmailValidator() {
   const [batchFile, setBatchFile] = useState<File | null>(null)
   const [isBatchLoading, setIsBatchLoading] = useState(false)
@@ -44,19 +68,31 @@ export function BatchEmailValidator() {
         if (!res.ok) throw new Error('Falha ao buscar resultados.')
         const csvText = await res.text()
         const lines = csvText.trim().split('\n')
-        const headers = lines[0].split(',').map((h) => h.replace(/"/g, ''))
+        const headerLine = lines.shift() || ''
+        const headers = parseCsvLine(headerLine)
+
         const emailIdx = headers.indexOf('Email Address')
         const statusIdx = headers.indexOf('ZB Status')
         const subStatusIdx = headers.indexOf('ZB Sub Status')
 
-        const results: BatchResult[] = lines.slice(1).map((line) => {
-          const values = line.split(',').map((v) => v.replace(/"/g, ''))
-          return {
-            email: values[emailIdx],
-            status: values[statusIdx] as ValidationStatus,
-            sub_status: values[subStatusIdx],
-          }
-        })
+        if (emailIdx === -1 || statusIdx === -1 || subStatusIdx === -1) {
+          throw new Error(
+            'Formato de CSV inválido. Verifique os cabeçalhos das colunas.',
+          )
+        }
+
+        const results: BatchResult[] = lines
+          .map((line) => {
+            if (!line.trim()) return null
+            const values = parseCsvLine(line)
+            return {
+              email: values[emailIdx] || '',
+              status: (values[statusIdx] || 'unknown') as ValidationStatus,
+              sub_status: values[subStatusIdx] || '',
+            }
+          })
+          .filter((r): r is BatchResult => r !== null)
+
         setBatchResults(results)
         toast({
           title: 'Validação em lote concluída!',
@@ -129,8 +165,6 @@ export function BatchEmailValidator() {
     const fileName = batchFile.name.toLowerCase()
 
     if (fileName.endsWith('.xlsx') || fileName.endsWith('.xlms')) {
-      // Mocking conversion as we can't add a library to parse Excel files.
-      // This ensures the API receives a valid CSV format as required.
       const csvContent =
         'email\nvalid@example.com\ninvalid@example\ncatchall@example.com'
       const newFileName = fileName.replace(/\.[^/.]+$/, '.csv')
