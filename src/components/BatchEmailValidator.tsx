@@ -161,23 +161,9 @@ export function BatchEmailValidator() {
     setBatchProgress(0)
     setBatchResults([])
 
-    let fileToSend = batchFile
-    const fileName = batchFile.name.toLowerCase()
-
-    if (fileName.endsWith('.xlsx') || fileName.endsWith('.xlms')) {
-      const csvContent =
-        'email\nvalid@example.com\ninvalid@example\ncatchall@example.com'
-      const newFileName = fileName.replace(/\.[^/.]+$/, '.csv')
-      fileToSend = new File([csvContent], newFileName, { type: 'text/csv' })
-      toast({
-        title: 'Conversão de Arquivo',
-        description: `O arquivo ${batchFile.name} foi convertido para CSV para processamento.`,
-      })
-    }
-
     const formData = new FormData()
     formData.append('api_key', API_KEY)
-    formData.append('file', fileToSend)
+    formData.append('file', batchFile)
     formData.append('email_address_column', '1')
     try {
       const response = await fetch(BATCH_UPLOAD_URL, {
@@ -229,8 +215,8 @@ export function BatchEmailValidator() {
             setBatchResults([])
             setBatchProgress(0)
           }}
-          acceptedFormats=".csv,.txt,.xlsx,.xlms"
-          instructionText="Arraste e solte seu arquivo .csv, .txt, .xlsx ou .xlms aqui"
+          acceptedFormats=".csv,.txt"
+          instructionText="Arraste e solte seu arquivo .csv ou .txt aqui"
         />
         <Button
           onClick={handleBatchValidate}
