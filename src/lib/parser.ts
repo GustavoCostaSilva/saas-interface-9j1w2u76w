@@ -1,4 +1,3 @@
-import * as XLSX from 'xlsx'
 export const COLUMN_CODES = {
   RAZAO_SOCIAL: 'razao_social',
   NOME_SOCIO: 'nome_socio',
@@ -121,59 +120,6 @@ export const parseXml = (xmlText: string): Record<string, string>[] => {
         COLUMN_CODES,
       ).join(', ')}) existem em cada <record>.`,
     )
-  }
-
-  return data
-}
-
-export const parseXlsx = (
-  arrayBuffer: ArrayBuffer,
-): Record<string, string>[] => {
-  const workbook = XLSX.read(arrayBuffer, { type: 'array' })
-  const firstSheetName = workbook.SheetNames[0]
-  if (!firstSheetName) {
-    throw new Error('A planilha XLSX está vazia ou não contém abas.')
-  }
-  const worksheet = workbook.Sheets[firstSheetName]
-  const jsonData: any[][] = XLSX.utils.sheet_to_json(worksheet, {
-    header: 1,
-    defval: '',
-  })
-
-  if (jsonData.length < 1) {
-    throw new Error('A planilha está vazia.')
-  }
-
-  const headers = (jsonData[0] as string[]).map((h) => String(h).trim())
-  const requiredHeaders = Object.values(COLUMN_CODES)
-  const missingHeaders = requiredHeaders.filter((h) => !headers.includes(h))
-
-  if (missingHeaders.length > 0) {
-    throw new Error(
-      `Códigos de coluna ausentes na planilha: ${missingHeaders.join(', ')}`,
-    )
-  }
-
-  const data: Record<string, string>[] = []
-  const rows = jsonData.slice(1)
-
-  for (const row of rows) {
-    if (
-      row.some(
-        (cell) =>
-          cell !== null && cell !== undefined && String(cell).trim() !== '',
-      )
-    ) {
-      const entry: Record<string, string> = {}
-      for (let j = 0; j < headers.length; j++) {
-        entry[headers[j]] = String(row[j] || '').trim()
-      }
-      data.push(entry)
-    }
-  }
-
-  if (data.length === 0) {
-    throw new Error('Nenhum registro de dados válido encontrado na planilha.')
   }
 
   return data
