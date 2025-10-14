@@ -57,3 +57,54 @@ export const parseCsv = (csvText: string): Record<string, string>[] => {
   }
   return data
 }
+
+export const parseXml = (xmlText: string): Record<string, string>[] => {
+  const parser = new DOMParser()
+  const xmlDoc = parser.parseFromString(xmlText, 'application/xml')
+
+  const parserError = xmlDoc.querySelector('parsererror')
+  if (parserError) {
+    throw new Error('Arquivo XML malformado. Verifique a sintaxe.')
+  }
+
+  const records = Array.from(xmlDoc.getElementsByTagName('record'))
+  if (records.length === 0) {
+    throw new Error('Nenhum registro <record> encontrado no arquivo XML.')
+  }
+
+  const data: Record<string, string>[] = []
+  const keyMap: Record<string, string> = {
+    RazaoSocial: 'Razão Social',
+    NomeSocio: 'Nome Sócio',
+    EmailSocio: 'Email Sócio',
+    TelefoneSocio: 'Telefone Sócio',
+  }
+
+  for (const record of records) {
+    const entry: Record<string, string> = {}
+    const razsoc =
+      record.getElementsByTagName('RazaoSocial')[0]?.textContent ?? ''
+    const nomsoc =
+      record.getElementsByTagName('NomeSocio')[0]?.textContent ?? ''
+    const emlsoc =
+      record.getElementsByTagName('EmailSocio')[0]?.textContent ?? ''
+    const telsoc =
+      record.getElementsByTagName('TelefoneSocio')[0]?.textContent ?? ''
+
+    if (razsoc && nomsoc && (emlsoc || telsoc)) {
+      entry[keyMap.RazaoSocial] = razsoc
+      entry[keyMap.NomeSocio] = nomsoc
+      entry[keyMap.EmailSocio] = emlsoc
+      entry[keyMap.TelefoneSocio] = telsoc
+      data.push(entry)
+    }
+  }
+
+  if (data.length === 0) {
+    throw new Error(
+      'Nenhum registro válido encontrado. Verifique se as tags <RazaoSocial>, <NomeSocio>, <EmailSocio>, e <TelefoneSocio> existem em cada <record>.',
+    )
+  }
+
+  return data
+}

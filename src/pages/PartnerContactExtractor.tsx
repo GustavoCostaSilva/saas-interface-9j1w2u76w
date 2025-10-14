@@ -11,7 +11,7 @@ import { FileUploader } from '@/components/FileUploader'
 import { Loader2, CheckCircle, XCircle, Download } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { parseCsv } from '@/lib/parser'
+import { parseCsv, parseXml } from '@/lib/parser'
 
 type ProcessingStatus = 'idle' | 'loading' | 'success' | 'error'
 type ProcessedData = {
@@ -66,7 +66,15 @@ export default function PartnerContactExtractorPage() {
     reader.onload = async (e) => {
       try {
         const text = e.target?.result as string
-        const records = parseCsv(text)
+        let records: Record<string, string>[]
+
+        if (file.name.toLowerCase().endsWith('.xml')) {
+          records = parseXml(text)
+        } else if (file.name.toLowerCase().endsWith('.csv')) {
+          records = parseCsv(text)
+        } else {
+          throw new Error('Formato de arquivo não suportado. Use .csv ou .xml.')
+        }
 
         const emails: string[] = []
         const contacts: string[][] = []
@@ -210,9 +218,9 @@ export default function PartnerContactExtractorPage() {
         <CardHeader>
           <CardTitle>Extrair Contatos e E-mails</CardTitle>
           <CardDescription>
-            Faça o upload de sua planilha (.csv) para gerar arquivos de contatos
-            e e-mails de sócios. O arquivo deve conter as colunas: Razão Social,
-            Nome Sócio, Email Sócio, Telefone Sócio.
+            Faça o upload de sua planilha (.csv ou .xml) para gerar arquivos de
+            contatos e e-mails de sócios. O arquivo deve conter as colunas
+            necessárias.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -222,8 +230,8 @@ export default function PartnerContactExtractorPage() {
               setStatus('idle')
               setProcessedData(null)
             }}
-            acceptedFormats=".csv"
-            instructionText="Arraste e solte sua planilha .csv aqui"
+            acceptedFormats=".csv,.xml"
+            instructionText="Arraste e solte sua planilha .csv ou .xml aqui"
           />
           <div className="flex flex-col items-center gap-4">
             <Button
