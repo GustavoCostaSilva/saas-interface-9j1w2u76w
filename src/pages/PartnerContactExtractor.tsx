@@ -11,40 +11,131 @@ import { FileUploader } from '@/components/FileUploader'
 import { Loader2, CheckCircle, XCircle, Download } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { parseCsv } from '@/lib/parser'
 
 type ProcessingStatus = 'idle' | 'loading' | 'success' | 'error'
+type ProcessedData = {
+  emailsCsv: string
+  contactsCsv: string
+  totalContacts: number
+  totalEmails: number
+}
 
 export default function PartnerContactExtractorPage() {
   const [file, setFile] = useState<File | null>(null)
   const [status, setStatus] = useState<ProcessingStatus>('idle')
   const [errorMessage, setErrorMessage] = useState('')
+  const [processedData, setProcessedData] = useState<ProcessedData | null>(null)
   const { toast } = useToast()
+
+  const formatPhoneNumber = (phone: string): string => {
+    let digits = phone.replace(/\D/g, '')
+    if (digits.length >= 10 && digits.length <= 11) {
+      if (!digits.startsWith('55')) {
+        digits = '55' + digits
+      }
+    }
+    if (digits && !digits.startsWith('+')) {
+      digits = '+' + digits
+    }
+    return digits
+  }
+
+  const toCsvRow = (row: string[]): string => {
+    return row
+      .map((value) => {
+        if (
+          value.includes(',') ||
+          value.includes('"') ||
+          value.includes('\n')
+        ) {
+          return `"${value.replace(/"/g, '""')}"`
+        }
+        return value
+      })
+      .join(',')
+  }
 
   const handleProcess = async () => {
     if (!file) return
     setStatus('loading')
     setErrorMessage('')
+    setProcessedData(null)
 
-    await new Promise((resolve) => setTimeout(resolve, 2500))
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      try {
+        const text = e.target?.result as string
+        const records = parseCsv(text)
 
-    if (Math.random() > 0.15) {
-      setStatus('success')
-      toast({
-        title: 'Processamento concluído!',
-        description:
-          'Seus arquivos foram gerados e estão prontos para download.',
-      })
-    } else {
-      const error =
-        'Erro ao processar a planilha. Verifique se as colunas necessárias existem.'
+        const emails: string[] = []
+        const contacts: string[][] = []
+
+        for (const record of records) {
+          const partnerName = record['Nome Sócio']?.trim()
+          const companyName = record['Razão Social']?.trim()
+          const partnerEmail = record['Email Sócio']?.trim()
+          const partnerPhone = record['Telefone Sócio']?.trim()
+
+          if (partnerEmail) {
+            emails.push(partnerEmail)
+          }
+
+          if (partnerName && partnerPhone && companyName) {
+            const prompt = `Angela-Dibai Sales. OBJETIVO: Confirmar se número é de ${partnerName} (${companyName}). ABERTURA: Olá! Angela da Dibai Sales. Este número é de ${partnerName} da ${companyName}? CENÁRIOS: A)Sim=Silêncio+Log CONFIRMADO. B)Não=Desculpe+Log ERRADO. C)Conheço=Pedir número de ${partnerName}+Log NOVO. D)Quem é?=Yasmin sobre marketing ${companyName}.`
+            contacts.push([
+              partnerName,
+              formatPhoneNumber(partnerPhone),
+              companyName,
+              prompt,
+            ])
+          }
+        }
+
+        const emailsCsv = ['Email Sócio', ...emails].join('\n')
+        const contactsCsv = [
+          toCsvRow(['name', 'phone_number', 'bussines', 'prompt']),
+          ...contacts.map(toCsvRow),
+        ].join('\n')
+
+        setProcessedData({
+          emailsCsv,
+          contactsCsv,
+          totalContacts: contacts.length,
+          totalEmails: emails.length,
+        })
+        setStatus('success')
+        toast({
+          title: 'Processamento concluído!',
+          description: `Foram extraídos ${emails.length} e-mails e ${contacts.length} contatos.`,
+        })
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : 'Ocorreu um erro desconhecido.'
+        setErrorMessage(message)
+        setStatus('error')
+        toast({
+          variant: 'destructive',
+          title: 'Erro no Processamento',
+          description: message,
+        })
+      }
+    }
+
+    reader.onerror = () => {
+      const message = 'Não foi possível ler o arquivo.'
+      setErrorMessage(message)
       setStatus('error')
-      setErrorMessage(error)
       toast({
         variant: 'destructive',
-        title: 'Erro no Processamento',
-        description: error,
+        title: 'Erro de Leitura',
+        description: message,
       })
     }
+
+    reader.readAsText(file, 'UTF-8')
   }
 
   const createAndDownloadFile = (
@@ -64,22 +155,20 @@ export default function PartnerContactExtractorPage() {
   }
 
   const handleDownloadEmails = () => {
-    const content =
-      'Email Sócio\nsocio1@example.com\nsocio2@example.com\nsocio3@example.com'
+    if (!processedData) return
     createAndDownloadFile(
       'emails_socios.csv',
-      content,
+      processedData.emailsCsv,
       'text/csv;charset=utf-8;',
     )
   }
 
   const handleDownloadContacts = () => {
-    const content =
-      'name,phone_number,bussines,prompt\n"Socio Um","+5511999998888","Empresa Lead","Angela-Dibai Sales. OBJETIVO: Confirmar se número é de Socio Um (Empresa Lead). ABERTURA: Olá! Angela da Dibai Sales. Este número é de Socio Um da Empresa Lead? CENÁRIOS: A)Sim=Silêncio+Log CONFIRMADO. B)Não=Desculpe+Log ERRADO. C)Conheço=Pedir número de Socio Um+Log NOVO. D)Quem é?=Yasmin sobre marketing Empresa Lead."'
+    if (!processedData) return
     createAndDownloadFile(
-      'contatos_socios_formatado.xlsx',
-      content,
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'contatos_socios_formatado.csv',
+      processedData.contactsCsv,
+      'text/csv;charset=utf-8;',
     )
   }
 
@@ -93,7 +182,9 @@ export default function PartnerContactExtractorPage() {
               Processamento concluído!
             </AlertTitle>
             <AlertDescription>
-              Seus arquivos estão prontos para download.
+              {`Foram extraídos ${processedData?.totalEmails || 0} e-mails e ${
+                processedData?.totalContacts || 0
+              } contatos. Seus arquivos estão prontos para download.`}
             </AlertDescription>
           </Alert>
         )
@@ -119,8 +210,9 @@ export default function PartnerContactExtractorPage() {
         <CardHeader>
           <CardTitle>Extrair Contatos e E-mails</CardTitle>
           <CardDescription>
-            Faça o upload de sua planilha para gerar arquivos de contatos e
-            e-mails de sócios.
+            Faça o upload de sua planilha (.csv) para gerar arquivos de contatos
+            e e-mails de sócios. O arquivo deve conter as colunas: Razão Social,
+            Nome Sócio, Email Sócio, Telefone Sócio.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -128,9 +220,10 @@ export default function PartnerContactExtractorPage() {
             onFileSelect={(selectedFile) => {
               setFile(selectedFile)
               setStatus('idle')
+              setProcessedData(null)
             }}
-            acceptedFormats=".xlsx,.csv"
-            instructionText="Arraste e solte sua planilha aqui"
+            acceptedFormats=".csv"
+            instructionText="Arraste e solte sua planilha .csv aqui"
           />
           <div className="flex flex-col items-center gap-4">
             <Button
@@ -153,13 +246,21 @@ export default function PartnerContactExtractorPage() {
             )}
             {status === 'success' && (
               <div className="w-full grid sm:grid-cols-2 gap-4 animate-fade-in-up">
-                <Button onClick={handleDownloadEmails} className="w-full">
+                <Button
+                  onClick={handleDownloadEmails}
+                  className="w-full"
+                  disabled={!processedData || processedData.totalEmails === 0}
+                >
                   <Download className="mr-2 h-4 w-4" />
-                  Baixar E-mails de Sócios (.csv)
+                  Baixar E-mails ({processedData?.totalEmails || 0})
                 </Button>
-                <Button onClick={handleDownloadContacts} className="w-full">
+                <Button
+                  onClick={handleDownloadContacts}
+                  className="w-full"
+                  disabled={!processedData || processedData.totalContacts === 0}
+                >
                   <Download className="mr-2 h-4 w-4" />
-                  Baixar Contatos Formatados
+                  Baixar Contatos ({processedData?.totalContacts || 0})
                 </Button>
               </div>
             )}
