@@ -1,5 +1,3 @@
-import type * as XLSX from 'xlsx'
-
 type ProcessedRow = {
   name: string
   phone_number: string
@@ -30,8 +28,10 @@ const formatPhoneNumber = (phone: any): string => {
   return `'+55 ${trimmedPhone}`
 }
 
-export const processExcelFile = async (file: File): Promise<Blob[]> => {
-  const XLSX = await import('xlsx')
+export const processExcelFile = async (
+  file: File,
+  XLSX: any,
+): Promise<Blob[]> => {
   const data = await file.arrayBuffer()
   const workbook = XLSX.read(data)
   const sheetName = workbook.SheetNames[0]
