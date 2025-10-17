@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx'
+import type * as XLSX from 'xlsx'
 
 type ProcessedRow = {
   name: string
@@ -31,6 +31,7 @@ const formatPhoneNumber = (phone: any): string => {
 }
 
 export const processExcelFile = async (file: File): Promise<Blob[]> => {
+  const XLSX = await import('xlsx')
   const data = await file.arrayBuffer()
   const workbook = XLSX.read(data)
   const sheetName = workbook.SheetNames[0]
